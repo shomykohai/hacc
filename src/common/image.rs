@@ -271,7 +271,7 @@ pub struct ImagePartition<'a> {
     pub content: &'a [u8],
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Image<'a> {
     #[cfg(feature = "alloc")]
     pub data: Cow<'a, [u8]>,
