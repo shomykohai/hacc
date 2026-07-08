@@ -7,7 +7,7 @@ const PRELOADER: &[u8] = include_bytes!("../../tests/files/preloader.img");
 fn gfh_parse() {
     let file = GfhFile::try_read(PRELOADER).expect("Failed to parse GFH file");
 
-    assert_eq!(file.gfhs().count(), 4);
+    assert_eq!(file.gfhs().count(), 6);
     assert!(file.signature().is_some());
     assert!(file.get_gfh(GfhType::AntiClone).is_some());
     assert!(file.get_gfh(GfhType::ConfidentialBinInfo).is_none())
