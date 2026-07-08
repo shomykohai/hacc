@@ -60,9 +60,9 @@ impl Gfh for GfhBromSecCfg {
     fn validate(&self) -> Result<()> {
         self.header().validate()?;
 
-        if self.header().gfh_type() != GfhType::BlInfo {
+        if self.header().gfh_type() != GfhType::BromSecCfg {
             return Err(Error::Gfh(GfhError::InvalidType(
-                GfhType::BlInfo,
+                GfhType::BromSecCfg,
                 self.header().gfh_type(),
             )));
         }

@@ -234,7 +234,7 @@ impl<'a> GfhFile<'a> {
                 }
 
                 GfhType::ToolAuth => GfhToolAuth::try_read(gfh_data).ok().map(GfhKind::ToolAuth),
-                _ => None,
+                _ => Some(GfhKind::Unknown(header)),
             }
         })
     }
