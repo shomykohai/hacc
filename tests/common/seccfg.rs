@@ -29,6 +29,7 @@ fn seccfg_lock_states() {
     }
 }
 
+#[cfg(feature = "alloc")]
 #[test]
 fn seccfg_try_read_and_write() {
     let original = SecCfgV4::new(LockState::Lock);
@@ -47,6 +48,7 @@ fn seccfg_try_read_and_write() {
     assert_eq!(read_back.hash(), original.hash());
 }
 
+#[cfg(feature = "alloc")]
 #[test]
 fn seccfg_modify_fields() {
     let mut seccfg = SecCfgV4::new(LockState::Default);
