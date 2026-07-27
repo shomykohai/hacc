@@ -1,5 +1,6 @@
 use thiserror::Error as TError;
 
+pub use crate::bootctrl::BootControlError;
 pub use crate::common::gfh::GfhError;
 pub use crate::da::DaError;
 pub use crate::preloader::PreloaderError;
@@ -23,6 +24,9 @@ pub enum Error {
 
     #[error("DA parsing error: {0:?}")]
     Da(#[from] DaError),
+
+    #[error("Boot control parsing error: {0:?}")]
+    BootControl(#[from] BootControlError),
 
     #[error("Zerocopy error")]
     Zerocopy,

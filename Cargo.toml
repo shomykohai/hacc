@@ -10,6 +10,7 @@ categories = ["parsing", "no-std", "no-std::no-alloc"]
 
 [dependencies]
 bilge = "0.3.0"
+crc32fast = { version = "1.5.0", default-features = false, optional = true }
 memchr = { version = "2.8.1", default-features = false }
 thiserror = { version = "2.0.18", default-features = false }
 zerocopy = { version = "0.8.48", features = ["zerocopy-derive", "derive"] }
@@ -18,5 +19,6 @@ zerocopy = { version = "0.8.48", features = ["zerocopy-derive", "derive"] }
 include_bytes_aligned = "0.2.0"
 
 [features]
-default = ["alloc"]
+default = ["alloc", "crc32"]
 alloc = []
+crc32 = ["crc32fast"]
