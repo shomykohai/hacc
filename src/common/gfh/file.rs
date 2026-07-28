@@ -51,21 +51,21 @@ pub struct CtM1Key {
     n_len: u32,
     m_coeff: u16,
     cut_length: u16,
-    e_key: [u16; 128],
-    n_key: [u16; 128],
+    e_key: [u8; 256],
+    n_key: [u8; 256],
 }
 
 impl CtM1Key {
-    pub fn new(e_key: &[u16], n_key: &[u16], m_coeff: u16, cut_length: u16) -> Self {
-        let mut e_key_arr = [0u16; 128];
-        let mut n_key_arr = [0u16; 128];
+    pub fn new(e_key: &[u8], n_key: &[u8], m_coeff: u16, cut_length: u16) -> Self {
+        let mut e_key_arr = [0u8; 256];
+        let mut n_key_arr = [0u8; 256];
 
         e_key_arr[..e_key.len()].copy_from_slice(e_key);
         n_key_arr[..n_key.len()].copy_from_slice(n_key);
 
         Self {
-            e_len: (e_key.len() * 2) as u32,
-            n_len: (n_key.len() * 2) as u32,
+            e_len: e_key.len() as u32,
+            n_len: n_key.len() as u32,
             m_coeff,
             cut_length,
             e_key: e_key_arr,
@@ -89,12 +89,12 @@ impl CtM1Key {
         self.cut_length
     }
 
-    pub fn e_key(&self) -> &[u16] {
-        &self.e_key[..(self.e_len as usize / 2)]
+    pub fn e_key(&self) -> &[u8] {
+        &self.e_key[..(self.e_len as usize)]
     }
 
-    pub fn n_key(&self) -> &[u16] {
-        &self.n_key[..(self.n_len as usize / 2)]
+    pub fn n_key(&self) -> &[u8] {
+        &self.n_key[..(self.n_len as usize)]
     }
 }
 
