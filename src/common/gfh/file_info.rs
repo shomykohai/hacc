@@ -237,8 +237,9 @@ impl Gfh for GfhFileInfo {
         if self.content_offset > self.file_len
             || self.sig_len > self.file_len
             || self.content_offset + self.sig_len > self.file_len
-            || self.jump_offset < self.content_offset
-            || self.file_len - self.sig_len <= self.jump_offset
+            || ((self.jump_offset < self.content_offset
+                || self.file_len - self.sig_len <= self.jump_offset)
+                && self.jump_offset != 0)
         {
             return Err(Error::Gfh(GfhError::FileOffsetOutOfBounds(
                 self.content_offset,
