@@ -3,6 +3,7 @@ use zerocopy::{Immutable, IntoBytes, KnownLayout, TryFromBytes};
 use super::header::GfhHeader;
 use super::{Gfh, GfhError, GfhSigPadType};
 use crate::error::{Error, Result};
+use crate::gfh::CtM1Key;
 use crate::gfh::header::GfhType;
 use crate::traits::TryRead;
 
@@ -14,10 +15,10 @@ pub struct GfhToolAuth {
     pub attr: u32,
     pub brom_verified_num: u32,
     pub da_hash_num: u32,
-    //pub da_hash: [[u8; 32]; 10],
-    //pub sbc_public_key: CtM1Key,
-    //pub sla_public_key: CtM1Key,
-    //pub daa_public_key: CtM1Key,
+    pub da_hash: [[u8; 32]; 10],
+    pub sbc_public_key: CtM1Key,
+    pub sla_public_key: CtM1Key,
+    pub daa_public_key: CtM1Key,
 }
 
 impl GfhToolAuth {
