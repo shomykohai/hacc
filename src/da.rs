@@ -148,6 +148,9 @@ pub enum DaEntryHeader<'a> {
 }
 
 pub struct DaEntry<'a> {
+    #[cfg(feature = "alloc")]
+    data: Cow<'a, [u8]>,
+    #[cfg(not(feature = "alloc"))]
     data: &'a [u8],
     version: DaHeaderVersion,
     entry: DaEntryHeader<'a>,
@@ -210,6 +213,7 @@ impl<'a> DaEntry<'a> {
         }
     }
 
+    /// Returns the data of the region, including the signature.
     pub fn get_region_data(&self, index: usize) -> Option<&[u8]> {
         let region = self.get_region(index)?;
         let offset = region.offset();
@@ -220,6 +224,33 @@ impl<'a> DaEntry<'a> {
         }
 
         Some(&self.data[offset..offset + length])
+    }
+
+    /// Returns the signature of the region, if any.
+    pub fn get_region_sig(&self, index: usize) -> Option<&[u8]> {
+        let region = self.get_region(index)?;
+        let offset = region.offset();
+        let end_off = region.end_offset();
+        let length = region.length();
+
+        if end_off - offset > self.data.len() {
+            return None;
+        }
+
+        Some(&self.data[end_off..length])
+    }
+
+    /// Returns the content of the region, excluding the signature.
+    pub fn get_region_content(&self, index: usize) -> Option<&[u8]> {
+        let region = self.get_region(index)?;
+        let offset = region.offset();
+        let end_off = region.end_offset();
+
+        if end_off - offset > self.data.len() {
+            return None;
+        }
+
+        Some(&self.data[offset..end_off])
     }
 
     pub fn da1(&self) -> &DaRegion {
@@ -256,6 +287,22 @@ impl<'a> DaEntry<'a> {
         }
     }
 
+    pub fn da1_code(&self) -> &[u8] {
+        if self.region_count() == 2 {
+            self.get_region_content(0).expect("Region should exist")
+        } else {
+            self.get_region_content(1).expect("Region should exist")
+        }
+    }
+
+    pub fn da2_code(&self) -> &[u8] {
+        if self.region_count() == 2 {
+            self.get_region_content(1).expect("Region should exist")
+        } else {
+            self.get_region_content(2).expect("Region should exist")
+        }
+    }
+
     pub fn validate(&self) -> Result<()> {
         if self.region_count() < Self::MIN_REGION_COUNT {
             return Err(Error::Da(DaError::RegionCountTooSmall(self.region_count())));
@@ -284,6 +331,59 @@ impl<'a> DaEntry<'a> {
 
             Ok(())
         })
+    }
+}
+
+#[cfg(feature = "alloc")]
+impl<'a> DaEntry<'a> {
+    pub fn get_region_data_mut(&mut self, index: usize) -> Option<&mut [u8]> {
+        let region = self.get_region(index)?;
+        let offset = region.offset();
+        let length = region.length();
+
+        if offset + length > self.data.len() {
+            return None;
+        }
+
+        Some(&mut self.data.to_mut()[offset..offset + length])
+    }
+
+    pub fn get_region_content_mut(&mut self, index: usize) -> Option<&mut [u8]> {
+        let region = self.get_region(index)?;
+        let offset = region.offset();
+        let end_off = region.end_offset();
+
+        if end_off - offset > self.data.len() {
+            return None;
+        }
+
+        Some(&mut self.data.to_mut()[offset..end_off])
+    }
+
+    pub fn get_region_mut(&mut self, index: usize) -> Option<&mut DaRegion> {
+        if index >= self.region_count() {
+            return None;
+        }
+        match &mut self.entry {
+            DaEntryHeader::V3(header) => Some(&mut header.to_mut().regions[index]),
+            DaEntryHeader::V4(header) => Some(&mut header.to_mut().regions[index]),
+        }
+    }
+
+    pub fn da1_data_mut(&mut self) -> &mut [u8] {
+        if self.region_count() == 2 {
+            self.get_region_data_mut(0).expect("Region should exist")
+        } else {
+            self.get_region_data_mut(1).expect("Region should exist")
+        }
+    }
+
+    pub fn da2_data_mut(&mut self) -> &mut [u8] {
+        if self.region_count() == 2 {
+            self.get_region_data_mut(1).expect("Region should exist")
+        } else {
+            self.get_region_data_mut(2).expect("Region should exist")
+        }
     }
 }
 
@@ -377,6 +477,21 @@ impl<'a> Da<'a> {
         &self.header
     }
 
+    #[cfg(not(feature = "alloc"))]
+    pub fn data(&self) -> &[u8] {
+        self.data
+    }
+
+    #[cfg(feature = "alloc")]
+    pub fn data(&self) -> &[u8] {
+        &self.data
+    }
+
+    #[cfg(feature = "alloc")]
+    pub fn data_mut(&mut self) -> &mut [u8] {
+        self.data.to_mut()
+    }
+
     pub fn entries(&self) -> impl Iterator<Item = DaEntry<'_>> + '_ {
         let mut offset = DaHeader::SIZE;
         (0..self.header.da_count()).filter_map(move |_| {
@@ -384,8 +499,13 @@ impl<'a> Da<'a> {
                 return None;
             }
 
+            #[cfg(feature = "alloc")]
+            let entry_data = self.data.clone();
+            #[cfg(not(feature = "alloc"))]
+            let entry_data = self.data;
+
             let entry = DaEntry {
-                data: &self.data,
+                data: entry_data,
                 version: self.header.version(),
                 entry: match self.header.version() {
                     DaHeaderVersion::V3 => {
