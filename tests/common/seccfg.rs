@@ -1,5 +1,7 @@
 use hacc::seccfg::DmVerityState;
-use hacc::traits::{TryRead, TryWrite};
+use hacc::traits::TryRead;
+#[cfg(feature = "alloc")]
+use hacc::traits::TryWrite;
 use hacc::{LockState, SecCfgV4};
 
 const SECCFG_V4_IMAGE: &[u8] = include_bytes!("../../tests/files/seccfg.bin");

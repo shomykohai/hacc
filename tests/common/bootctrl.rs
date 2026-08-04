@@ -1,4 +1,6 @@
-use hacc::traits::{TryRead, TryWrite};
+use hacc::traits::TryRead;
+#[cfg(feature = "alloc")]
+use hacc::traits::TryWrite;
 use hacc::{BootControl, BootPartition, OFFSET_SLOT_SUFFIX};
 
 const MISC_IMAGE: &[u8] = include_bytes!("../../tests/files/misc.bin");
