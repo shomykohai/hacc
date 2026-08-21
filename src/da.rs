@@ -5,6 +5,8 @@ use memchr::memmem;
 use thiserror::Error as TError;
 use zerocopy::{Immutable, IntoBytes, KnownLayout, TryFromBytes};
 
+#[cfg(feature = "alloc")]
+use crate::TryWrite;
 use crate::{Error, Result, TryRead};
 
 const MAX_REGIONS: usize = 10;
@@ -429,6 +431,14 @@ impl DaHeader {
     pub const fn set_da_count(&mut self, count: u32) {
         self.da_count = count;
     }
+
+    pub fn set_desc(&mut self, desc: &[u8]) {
+        let len = desc.len().min(self.desc.len());
+        self.desc[..len].copy_from_slice(&desc[..len]);
+        if len < self.desc.len() {
+            self.desc[len..].fill(0);
+        }
+    }
 }
 
 impl Default for DaHeader {
@@ -463,6 +473,19 @@ impl<'a> TryRead<'a> for DaHeader {
     }
 }
 
+#[cfg(feature = "alloc")]
+impl TryWrite for DaHeader {
+    fn try_write(&self, data: &mut [u8]) -> Result<usize> {
+        if data.len() < Self::SIZE {
+            return Err(Error::Zerocopy);
+        }
+
+        self.write_to(&mut data[..Self::SIZE]).map_err(|_| Error::Zerocopy)?;
+
+        Ok(Self::SIZE)
+    }
+}
+
 #[derive(Debug)]
 pub struct Da<'a> {
     #[cfg(feature = "alloc")]
@@ -475,6 +498,10 @@ pub struct Da<'a> {
 impl<'a> Da<'a> {
     pub const fn header(&self) -> &DaHeader {
         &self.header
+    }
+
+    pub const fn header_mut(&mut self) -> &mut DaHeader {
+        &mut self.header
     }
 
     #[cfg(not(feature = "alloc"))]
