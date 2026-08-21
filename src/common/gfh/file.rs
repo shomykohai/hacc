@@ -129,6 +129,8 @@ pub trait Gfh {
     }
 }
 
+// TODO: Find a way to avoid this.
+#[allow(clippy::large_enum_variant)]
 pub enum GfhKind {
     AntiClone(GfhAntiClone),
     FileInfo(GfhFileInfo),
