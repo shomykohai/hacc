@@ -2,7 +2,7 @@ use hacc::Preloader;
 use hacc::traits::TryRead;
 
 const PRELOADER: &[u8] = include_bytes!("../../tests/files/preloader.img");
-const EMI_SIZE: usize = 0x50C;
+const EMI_SIZE: usize = 0x508;
 const PL_CONTENT_SIZE: usize = 0x9A4F4;
 
 #[test]

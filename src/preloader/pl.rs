@@ -6,6 +6,8 @@ use crate::gfh::GfhFileInfo;
 use crate::traits::TryRead;
 use crate::{Error, Result};
 
+const BL_EXISTS_MAGIC: u32 = 0x42424242;
+
 #[derive(Debug, Immutable, IntoBytes, TryFromBytes, KnownLayout)]
 #[repr(C)]
 struct BlDescriptor {
@@ -29,8 +31,14 @@ struct Brlyt {
 }
 
 impl Brlyt {
-    pub const fn gfh_offset(&self) -> u32 {
-        self.bl_desc[0].bl_begin_addr
+    pub fn preloader_offset(&self) -> u32 {
+        for desc in &self.bl_desc {
+            if desc.bl_exists_magic == BL_EXISTS_MAGIC && desc.bl_type == GfhFileType::ArmBl {
+                return desc.bl_begin_addr;
+            }
+        }
+
+        0
     }
 }
 
@@ -92,7 +100,7 @@ impl<'a> TryRead<'a> for Preloader<'a> {
             == Some(Preloader::BRLYT_ID)
             && let Ok(brlyt) = Brlyt::try_read(&data[Preloader::BRLYT_OFFSET..])
         {
-            brlyt.gfh_offset() as usize
+            brlyt.preloader_offset() as usize
         } else {
             0
         };
@@ -105,7 +113,18 @@ impl<'a> TryRead<'a> for Preloader<'a> {
             .windows(Preloader::EMI_ID.len())
             .position(|window| window == Preloader::EMI_ID);
 
-        let emi_size = emi_offset.map_or(0, |offset| gfh.content().len() - offset);
+        let emi_size = emi_offset
+            .and_then(|off| {
+                (off + 4..=gfh.content().len().saturating_sub(4))
+                    .rev()
+                    .find(|&p| {
+                        let n = u32::from_le_bytes(gfh.content()[p..p + 4].try_into().unwrap())
+                            as usize;
+                        n > 0 && off + n == p
+                    })
+                    .map(|p| p - off)
+            })
+            .unwrap_or_else(|| gfh.content().len() - emi_offset.unwrap_or(0));
 
         Ok(Self { gfh, emi_offset: emi_offset.unwrap_or(0), emi_size })
     }
