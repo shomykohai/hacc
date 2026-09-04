@@ -9,7 +9,7 @@ keywords = ["mediatek", "parsing", "no-std"]
 categories = ["parsing", "no-std", "no-std::no-alloc"]
 
 [dependencies]
-bilge = "0.3.0"
+bilge = "0.4.0"
 crc32fast = { version = "1.5.0", default-features = false, optional = true }
 memchr = { version = "2.8.1", default-features = false }
 thiserror = { version = "2.0.18", default-features = false }
