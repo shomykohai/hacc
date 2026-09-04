@@ -7,6 +7,14 @@ license = "MIT"
 authors = ["Shomy <git@itssho.my>", "rva3 <rva333@protonmail.com>"]
 keywords = ["mediatek", "parsing", "no-std"]
 categories = ["parsing", "no-std", "no-std::no-alloc"]
+repository = "https://github.com/shomykohai/hacc"
+exclude = [
+    "tests/",
+    ".github/",
+    "flake.nix",
+    "flake.lock",
+    "rustfmt.toml",
+]
 
 [dependencies]
 bilge = "0.4.0"
